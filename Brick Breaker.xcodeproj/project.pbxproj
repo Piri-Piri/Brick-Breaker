@@ -15,6 +15,13 @@
 		63970FA319EAA5ED008C10BD /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63970FA219EAA5ED008C10BD /* Images.xcassets */; };
 		63970FA619EAA5ED008C10BD /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 63970FA419EAA5ED008C10BD /* LaunchScreen.xib */; };
 		63970FB219EAA5ED008C10BD /* Brick_BreakerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63970FB119EAA5ED008C10BD /* Brick_BreakerTests.swift */; };
+		63970FBE19EAA793008C10BD /* BallBlue@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63970FBB19EAA793008C10BD /* BallBlue@2x.png */; };
+		63970FBF19EAA793008C10BD /* BrickGreen@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63970FBC19EAA793008C10BD /* BrickGreen@2x.png */; };
+		63970FC019EAA793008C10BD /* Paddle@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63970FBD19EAA793008C10BD /* Paddle@2x.png */; };
+		63B2306019EB1DE200CA75DE /* BrickExplosion.sks in Resources */ = {isa = PBXBuildFile; fileRef = 63B2305E19EB1DE200CA75DE /* BrickExplosion.sks */; };
+		63B2306219EB1F3400CA75DE /* Explosion.caf in Resources */ = {isa = PBXBuildFile; fileRef = 63B2305B19EB1D9500CA75DE /* Explosion.caf */; };
+		63B2306419EB20B600CA75DE /* BrickBlue@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 63B2306319EB20B600CA75DE /* BrickBlue@2x.png */; };
+		63B2306619EB20E800CA75DE /* Brick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B2306519EB20E800CA75DE /* Brick.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +47,13 @@
 		63970FAB19EAA5ED008C10BD /* Brick BreakerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Brick BreakerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63970FB019EAA5ED008C10BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		63970FB119EAA5ED008C10BD /* Brick_BreakerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brick_BreakerTests.swift; sourceTree = "<group>"; };
+		63970FBB19EAA793008C10BD /* BallBlue@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "BallBlue@2x.png"; sourceTree = "<group>"; };
+		63970FBC19EAA793008C10BD /* BrickGreen@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "BrickGreen@2x.png"; sourceTree = "<group>"; };
+		63970FBD19EAA793008C10BD /* Paddle@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Paddle@2x.png"; sourceTree = "<group>"; };
+		63B2305B19EB1D9500CA75DE /* Explosion.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Explosion.caf; sourceTree = "<group>"; };
+		63B2305E19EB1DE200CA75DE /* BrickExplosion.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = BrickExplosion.sks; sourceTree = "<group>"; };
+		63B2306319EB20B600CA75DE /* BrickBlue@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "BrickBlue@2x.png"; sourceTree = "<group>"; };
+		63B2306519EB20E800CA75DE /* Brick.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Brick.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +96,7 @@
 			isa = PBXGroup;
 			children = (
 				63970F9719EAA5ED008C10BD /* AppDelegate.swift */,
+				63B2306519EB20E800CA75DE /* Brick.swift */,
 				63970F9919EAA5ED008C10BD /* GameScene.sks */,
 				63970F9B19EAA5ED008C10BD /* GameScene.swift */,
 				63970F9D19EAA5ED008C10BD /* GameViewController.swift */,
@@ -96,6 +111,12 @@
 		63970F9519EAA5ED008C10BD /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				63B2305D19EB1DB600CA75DE /* Effects */,
+				63B2305C19EB1DAB00CA75DE /* Sounds */,
+				63970FBB19EAA793008C10BD /* BallBlue@2x.png */,
+				63970FBC19EAA793008C10BD /* BrickGreen@2x.png */,
+				63B2306319EB20B600CA75DE /* BrickBlue@2x.png */,
+				63970FBD19EAA793008C10BD /* Paddle@2x.png */,
 				63970F9619EAA5ED008C10BD /* Info.plist */,
 			);
 			name = "Supporting Files";
@@ -116,6 +137,22 @@
 				63970FB019EAA5ED008C10BD /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		63B2305C19EB1DAB00CA75DE /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				63B2305B19EB1D9500CA75DE /* Explosion.caf */,
+			);
+			name = Sounds;
+			sourceTree = "<group>";
+		};
+		63B2305D19EB1DB600CA75DE /* Effects */ = {
+			isa = PBXGroup;
+			children = (
+				63B2305E19EB1DE200CA75DE /* BrickExplosion.sks */,
+			);
+			name = Effects;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -198,8 +235,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				63B2306419EB20B600CA75DE /* BrickBlue@2x.png in Resources */,
 				63970FA619EAA5ED008C10BD /* LaunchScreen.xib in Resources */,
 				63970FA319EAA5ED008C10BD /* Images.xcassets in Resources */,
+				63970FBF19EAA793008C10BD /* BrickGreen@2x.png in Resources */,
+				63970FBE19EAA793008C10BD /* BallBlue@2x.png in Resources */,
+				63970FC019EAA793008C10BD /* Paddle@2x.png in Resources */,
+				63B2306219EB1F3400CA75DE /* Explosion.caf in Resources */,
+				63B2306019EB1DE200CA75DE /* BrickExplosion.sks in Resources */,
 				63970F9A19EAA5ED008C10BD /* GameScene.sks in Resources */,
 				63970FA119EAA5ED008C10BD /* Main.storyboard in Resources */,
 			);
@@ -220,6 +263,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				63970F9C19EAA5ED008C10BD /* GameScene.swift in Sources */,
+				63B2306619EB20E800CA75DE /* Brick.swift in Sources */,
 				63970F9E19EAA5ED008C10BD /* GameViewController.swift in Sources */,
 				63970F9819EAA5ED008C10BD /* AppDelegate.swift in Sources */,
 			);
@@ -413,6 +457,7 @@
 				63970FB719EAA5ED008C10BD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63970FB819EAA5ED008C10BD /* Build configuration list for PBXNativeTarget "Brick BreakerTests" */ = {
 			isa = XCConfigurationList;
@@ -421,6 +466,7 @@
 				63970FBA19EAA5ED008C10BD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
