@@ -10,17 +10,19 @@ import SpriteKit
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
+    var menu: Menu!
+    
     var brickLayer: SKNode!
     var level: [[Int]] = [[]]
     var currentLevel:Int = 1 {
         didSet {
             levelDisplay.text = "Level: \(currentLevel)"
+            menu.levelNumber = currentLevel
         }
     }
     let kFinalLevel:Int = 9
     
     var paddle: SKSpriteNode!
-    var ball: SKSpriteNode!
     
     let ballSpeed: CGFloat = 350.0
     var isBallReleased: Bool = false
@@ -44,21 +46,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     let kBallCategory:UInt32    = 0x1 << 0
     let kPaddleCategory:UInt32  = 0x1 << 1
-    let kEdgeCategory:UInt32   = 0x1 << 2
+    let kEdgeCategory:UInt32    = 0x1 << 2
     /* Category for Brick also defined in its class */
     let kBrickCategory:UInt32   = 0x1 << 3
     
-    var explosionSound: SKAction!
+    var ballBounceSound: SKAction!
+    var paddleBounceSound: SKAction!
+    var levelUpSound: SKAction!
+    var loseLifeSound: SKAction!
     
     var previousPosition:CGPoint = CGPointZero
     
     override func didMoveToView(view: SKView) {
         /* Setup your scene here */
         
+        // Setup background
+        self.backgroundColor = UIColor.whiteColor()
+        
         // Setup PhysicsWorld
         self.physicsWorld.gravity = CGVectorMake(0.0, 0.0)
         self.physicsWorld.contactDelegate = self
         self.physicsBody = SKPhysicsBody(edgeLoopFromRect: CGRectMake(0, -128, view.frame.size.width, view.frame.size.height + 100))
+        self.physicsBody?.categoryBitMask = kEdgeCategory
         
         // Setup Paddle
         paddle = SKSpriteNode(imageNamed: "Paddle")
@@ -69,7 +78,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.addChild(paddle)
         
         // Seup HUD Bar
-        let hudBar = SKSpriteNode(color: UIColor.darkGrayColor(), size: CGSizeMake(view.frame.size.width, 28))
+        let hudBar = SKSpriteNode(color: UIColor(red: 0.831, green: 0.831, blue: 0.831, alpha: 1.0), size: CGSizeMake(view.frame.size.width, 28))
         hudBar.position = CGPointMake(0, view.frame.size.height)
         hudBar.anchorPoint = CGPointMake(0, 1)
         self.addChild(hudBar)
@@ -77,7 +86,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Setup level label
         levelDisplay = SKLabelNode(fontNamed: "Futura")
         levelDisplay.text = "Level: 1"
-        levelDisplay.fontColor = SKColor.whiteColor()
+        levelDisplay.fontColor = SKColor.grayColor()
         levelDisplay.fontSize = 15.0
         levelDisplay.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.Left
         levelDisplay.verticalAlignmentMode = SKLabelVerticalAlignmentMode.Top
@@ -94,10 +103,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.addChild(heart)
         }
         
+        // Setup Sounds
+        ballBounceSound = SKAction.playSoundFileNamed("BallBounce.caf", waitForCompletion: false)
+        paddleBounceSound = SKAction.playSoundFileNamed("PaddleBounce.caf", waitForCompletion: false)
+        levelUpSound = SKAction.playSoundFileNamed("LevelUp.caf", waitForCompletion: false)
+        loseLifeSound = SKAction.playSoundFileNamed("LoseLife.caf", waitForCompletion: false)
+        
         // Setup Bricks
         brickLayer = SKNode()
         brickLayer.position = CGPointMake(0.0, view.frame.size.height - 28)
         self.addChild(brickLayer)
+        
+        // Add Mneu
+        menu = Menu()
+        menu.position = CGPointMake(view.frame.size.width * 0.5, view.frame.size.height * 0.5)
+        self.addChild(menu)
         
         // Start Gameplay (first level)
         loadLevel(currentLevel)
@@ -111,7 +131,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         })
         
         // Setup Ball: spawn at paddle
-        ball = SKSpriteNode(imageNamed: "BallBlue")
+        let ball = SKSpriteNode(imageNamed: "BallBlue")
         ball.position = CGPointMake(0.0, paddle.size.height)
         paddle.addChild(ball)
         
@@ -126,24 +146,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         switch levelNumber {
         case 1:
             level = [[1,2,3,3,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
-            //level = [[1]]
+  
         case 2:
             level = [[1,2,1,1,2,1],[0,1,3,3,1,0],[1,3,0,0,3,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
-            //level = [[1]]
+            
         case 3:
             level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
+            
         case 4:
             level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
+            
         case 5:
             level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
+            
         case 6:
             level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,4,4,2,0]]
+            
         case 7:
             level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
+            
         case 8:
             level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
+            
         case 9:
             level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
+            
         default:
             println("Error")
         }
@@ -169,55 +196,73 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         /* Called when a touch begins */
         
         for touch: AnyObject in touches {
-            if !isBallReleased {
-                isBallOnPaddle = true
+            if menu.hidden {
+                if !isBallReleased {
+                    isBallOnPaddle = true
+                }
             }
             previousPosition = touch.locationInNode(self)
         }
     }
     
     override func touchesMoved(touches: NSSet, withEvent event: UIEvent) {
-        for touch: AnyObject in touches {
-            let location = touch.locationInNode(self)
-            // Calc move distance (x axis) from touch
-            let moveDistanceX = location.x - previousPosition.x
-            // set new position
-            paddle.position = CGPointMake(paddle.position.x + moveDistanceX, paddle.position.y)
-            
-            /* 
+        if menu.hidden {
+            for touch: AnyObject in touches {
+                let location = touch.locationInNode(self)
+                // Calc move distance (x axis) from touch
+                let moveDistanceX = location.x - previousPosition.x
+                // set new position
+                paddle.position = CGPointMake(paddle.position.x + moveDistanceX, paddle.position.y)
+                
+                /*
                 Set min and max x (1/4) based on center anchor point of the paddle
-            */
-            let minPaddleX = -paddle.size.width * 0.25
-            let maxPaddleX  = self.frame.size.width + (paddle.size.width * 0.25)
-            
-            if paddle.position.x < minPaddleX {
-                paddle.position = CGPointMake(minPaddleX, paddle.position.y)
+                */
+                var minPaddleX = -paddle.size.width * 0.25
+                var maxPaddleX = self.frame.size.width + (paddle.size.width * 0.25)
+                
+                // limit with ball on the paddle
+                if isBallOnPaddle {
+                    minPaddleX = paddle.size.width * 0.5
+                    maxPaddleX = self.frame.size.width - (paddle.size.width * 0.5)
+                }
+                
+                if paddle.position.x < minPaddleX {
+                    paddle.position = CGPointMake(minPaddleX, paddle.position.y)
+                }
+                if paddle.position.x > maxPaddleX {
+                    paddle.position = CGPointMake(maxPaddleX, paddle.position.y)
+                }
+                // saved current position for next move
+                previousPosition = location
             }
-            if paddle.position.x > maxPaddleX {
-                paddle.position = CGPointMake(maxPaddleX, paddle.position.y)
-            }
-            // saved current position for next move
-            previousPosition = location
         }
     }
     
     override func touchesEnded(touches: NSSet, withEvent event: UIEvent) {
-        if isBallOnPaddle {
-            isBallOnPaddle = false
-            isBallReleased = true
-            paddle.removeAllChildren()
-            spawnBallWithLocation(CGPointMake(paddle.position.x, paddle.position.y + paddle.size.height) , withVelocity: CGVectorMake(0.0, ballSpeed))
+        if menu.hidden {
+            if isBallOnPaddle {
+                isBallOnPaddle = false
+                isBallReleased = true
+                paddle.removeAllChildren()
+                spawnBallWithLocation(CGPointMake(paddle.position.x, paddle.position.y + paddle.size.height) , withVelocity: CGVectorMake(0.0, ballSpeed))
+            }
+        }
+        else {
+            for touch: AnyObject in touches {
+                let touchedNode = menu.nodeAtPoint(touch.locationInNode(menu))
+                if touchedNode.name == "Play Button" {
+                    menu.hide()
+                }
+            }
         }
     }
    
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
         
-
-
-        
         if isLevelCompleted() {
             // Start next level
+            self.runAction(levelUpSound)
             currentLevel++
             
             // reset due game end
@@ -225,10 +270,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 lives = 2
                 currentLevel = 1
             }
+            
             loadLevel(currentLevel)
             newBall()
+            menu.show()
         }
         else if isBallReleased && !isBallOnPaddle && self.childNodeWithName("ball") == nil {
+            self.runAction(loseLifeSound)
             lives--
             
             // reset due gome over
@@ -236,6 +284,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 lives = 2
                 currentLevel = 1
                 loadLevel(currentLevel)
+                menu.show()
             }
             newBall()
         }
@@ -250,8 +299,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         })
     }
     
+    func spawnExtraBall(location:CGPoint) {
+        var dx:CGFloat
+        var dy:CGFloat
+        var direction:CGVector
+        
+        // random chance 1:2
+        if arc4random_uniform(UInt32(2)) == 0 {
+            // 45 degress to the right
+            dx = CGFloat(cos(M_PI_4))
+            dy = CGFloat(sin(M_PI_4))
+            direction = CGVectorMake(dx, dy)
+        }
+        else {
+            // 45 degress to the left (135 degress)
+            dx = CGFloat(cos(M_PI * 0.75))
+            dy = CGFloat(sin(M_PI * 0.75))
+            direction = CGVectorMake(dx, dy)
+        }
+        spawnBallWithLocation(location, withVelocity: CGVectorMake(direction.dx * ballSpeed, direction.dy * ballSpeed))
+    }
     
-    func spawnBallWithLocation(location:CGPoint, withVelocity:CGVector) {
+    func spawnBallWithLocation(location:CGPoint, withVelocity: CGVector) {
+        let ball = SKSpriteNode(imageNamed: "BallBlue")
         ball.name = "ball"
         ball.position = CGPointMake(location.x, location.y)
         ball.physicsBody = SKPhysicsBody(circleOfRadius: ball.size.width * 0.5)
@@ -261,8 +331,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ball.physicsBody?.friction = 0.0
         
         ball.physicsBody?.categoryBitMask = kBallCategory
+        /* ignore the other ball*/
         ball.physicsBody?.collisionBitMask = kEdgeCategory | kPaddleCategory | kBrickCategory
-        ball.physicsBody?.contactTestBitMask = kPaddleCategory | kBrickCategory
+        ball.physicsBody?.contactTestBitMask = kEdgeCategory | kPaddleCategory | kBrickCategory
         self.addChild(ball)
     }
     
@@ -313,13 +384,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 // bounce ball with calced angle (vector)
                 firstBody.velocity = CGVectorMake(direction.dx * ballSpeed, direction.dy * ballSpeed)
             }
+            self.runAction(paddleBounceSound)
         }
         
         if firstBody.categoryBitMask == kBallCategory && secondBody.categoryBitMask == kBrickCategory {
             // Collision between Ball and Brick: break brick in a explosion
             if secondBody.node?.respondsToSelector(Selector("hit")) == true {
+                if (secondBody.node as Brick).spawnExtraBall {
+                    // convert Brick (part of the bricklayer to coordinates of the scene)
+                    spawnExtraBall(brickLayer.convertPoint(secondBody.node!.position, toNode: self))
+                }
                 (secondBody.node as Brick).hit()
             }
+            self.runAction(ballBounceSound)
+        }
+        
+        if firstBody.categoryBitMask == kBallCategory && secondBody.categoryBitMask == kEdgeCategory {
+            self.runAction(ballBounceSound)
         }
     }
     
