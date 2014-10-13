@@ -20,6 +20,7 @@ class Brick: SKSpriteNode {
     
     let kBrickCategory:UInt32   = 0x1 << 3
     var brickType: BrickType = BrickType.Green
+    var isIndestructable: Bool = false
     
     let explosionSound = SKAction.playSoundFileNamed("Explosion.caf", waitForCompletion: false)
     
@@ -37,6 +38,7 @@ class Brick: SKSpriteNode {
             println("Error")
         }
         self.brickType = type
+        self.isIndestructable = (type == BrickType.Grey)
         
         self.physicsBody = SKPhysicsBody(rectangleOfSize: self.size)
         self.physicsBody?.categoryBitMask = kBrickCategory
@@ -48,17 +50,35 @@ class Brick: SKSpriteNode {
         case BrickType.Blue:
             self.texture = SKTexture(imageNamed: "BrickGreen")
             self.brickType = BrickType.Green
-        case BrickType.Green:
-            let brickExplosionPath = NSBundle.mainBundle().pathForResource("BrickExplosion", ofType: "sks")
-            var brickExplosion = NSKeyedUnarchiver.unarchiveObjectWithFile(brickExplosionPath!) as SKEmitterNode
-            brickExplosion.position = self.position
-            self.parent?.addChild(brickExplosion)
-            self.parent?.runAction(explosionSound)
             
+        case BrickType.Green:
+            self.createExplosion()
             self.removeFromParent()
+            
+        case BrickType.Grey:
+            println("Block is indestructable!")
+            
+        case BrickType.Yellow:
+            self.createExplosion()
+            self.removeFromParent()
+            
+            // Release an extra ball
+            //...
         default:
             println("Error")
         }
+    }
+    
+    func createExplosion(){
+        let brickExplosionPath = NSBundle.mainBundle().pathForResource("BrickExplosion", ofType: "sks")
+        var brickExplosion = NSKeyedUnarchiver.unarchiveObjectWithFile(brickExplosionPath!) as SKEmitterNode
+        brickExplosion.position = self.position
+        self.parent?.addChild(brickExplosion)
+        self.parent?.runAction(explosionSound)
+        
+        let brickExplosionLifeTime = Double(brickExplosion.particleLifetime) + Double(brickExplosion.particleLifetimeRange)
+        let removeExplosion = SKAction.sequence([SKAction.waitForDuration(brickExplosionLifeTime), SKAction.removeFromParent()])
+        brickExplosion.runAction(removeExplosion)
     }
     
 }

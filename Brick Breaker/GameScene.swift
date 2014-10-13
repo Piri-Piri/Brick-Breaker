@@ -12,9 +12,35 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var brickLayer: SKNode!
     var level: [[Int]] = [[]]
+    var currentLevel:Int = 1 {
+        didSet {
+            levelDisplay.text = "Level: \(currentLevel)"
+        }
+    }
+    let kFinalLevel:Int = 9
+    
     var paddle: SKSpriteNode!
+    var ball: SKSpriteNode!
     
     let ballSpeed: CGFloat = 350.0
+    var isBallReleased: Bool = false
+    var isBallOnPaddle: Bool = false
+    
+    var levelDisplay: SKLabelNode!
+    var hearts: NSMutableArray!
+    var lives: Int = 2 {
+        didSet {
+            for var i = 0; i < hearts.count; i++ {
+                let heart = (hearts.objectAtIndex(i) as SKSpriteNode)
+                
+                if lives > i {
+                    heart.texture = SKTexture(imageNamed: "HeartFull")
+                } else {
+                    heart.texture = SKTexture(imageNamed: "HeartEmpty")
+                }
+            }
+        }
+    }
     
     let kBallCategory:UInt32    = 0x1 << 0
     let kPaddleCategory:UInt32  = 0x1 << 1
@@ -29,11 +55,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func didMoveToView(view: SKView) {
         /* Setup your scene here */
         
-        
         // Setup PhysicsWorld
         self.physicsWorld.gravity = CGVectorMake(0.0, 0.0)
         self.physicsWorld.contactDelegate = self
-        self.physicsBody = SKPhysicsBody(edgeLoopFromRect: view.frame)
+        self.physicsBody = SKPhysicsBody(edgeLoopFromRect: CGRectMake(0, -128, view.frame.size.width, view.frame.size.height + 100))
         
         // Setup Paddle
         paddle = SKSpriteNode(imageNamed: "Paddle")
@@ -43,39 +68,82 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         paddle.physicsBody?.categoryBitMask = kPaddleCategory
         self.addChild(paddle)
         
-        // Setup Ball: spawn at initial location
-        spawnBallWithLocation(CGPointMake(view.frame.size.width * 0.5, view.frame.size.height * 0.5), withVelocity: CGVectorMake(40, 180))
+        // Seup HUD Bar
+        let hudBar = SKSpriteNode(color: UIColor.darkGrayColor(), size: CGSizeMake(view.frame.size.width, 28))
+        hudBar.position = CGPointMake(0, view.frame.size.height)
+        hudBar.anchorPoint = CGPointMake(0, 1)
+        self.addChild(hudBar)
+        
+        // Setup level label
+        levelDisplay = SKLabelNode(fontNamed: "Futura")
+        levelDisplay.text = "Level: 1"
+        levelDisplay.fontColor = SKColor.whiteColor()
+        levelDisplay.fontSize = 15.0
+        levelDisplay.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.Left
+        levelDisplay.verticalAlignmentMode = SKLabelVerticalAlignmentMode.Top
+        levelDisplay.position = CGPointMake(10, -10)
+        hudBar.addChild(levelDisplay)
+        
+        
+        // Setup HUD with hearts (26x22)
+        hearts = [SKSpriteNode(imageNamed: "HeartFull"),SKSpriteNode(imageNamed: "HeartFull")]
+        for var i = 0; i < hearts.count; i++ {
+            let heart = (hearts.objectAtIndex(i) as SKSpriteNode)
+            
+            heart.position = CGPointMake(view.frame.size.width - (16.0 + (29.0 * CGFloat(i))), view.frame.size.height - 14)
+            self.addChild(heart)
+        }
         
         // Setup Bricks
         brickLayer = SKNode()
-        brickLayer.position = CGPointMake(0.0, view.frame.size.height)
+        brickLayer.position = CGPointMake(0.0, view.frame.size.height - 28)
         self.addChild(brickLayer)
-        self.loadLevel(0)
         
+        // Start Gameplay (first level)
+        loadLevel(currentLevel)
+        newBall()
+    }
+    
+    func newBall() {
+        // remove existing ball(s)
+        self.enumerateChildNodesWithName("ball", usingBlock: { (node, stop) -> Void in
+            node.removeFromParent()
+        })
+        
+        // Setup Ball: spawn at paddle
+        ball = SKSpriteNode(imageNamed: "BallBlue")
+        ball.position = CGPointMake(0.0, paddle.size.height)
+        paddle.addChild(ball)
+        
+        self.isBallReleased = false
+
+        // Reset paddle position
+        paddle.position = CGPointMake(self.view!.frame.size.width * 0.5, 90)
     }
     
     func loadLevel(levelNumber: Int) {
+        brickLayer.removeAllChildren()
         switch levelNumber {
-        case 0:
-            level = [[1,2,1,1,1,2,1],[0,1,2,2,2,1,0],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0],[0,2,1,2,1,2,0]]
         case 1:
-            level = [[1,2,1,1,1,2,1],[0,1,2,2,2,1,0],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0],[0,2,1,2,1,2,0]]
+            level = [[1,2,3,3,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
+            //level = [[1]]
         case 2:
-            level = [[1,2,1,1,1,2,1],[0,1,2,2,2,1,0],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0],[0,2,1,2,1,2,0]]
+            level = [[1,2,1,1,2,1],[0,1,3,3,1,0],[1,3,0,0,3,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
+            //level = [[1]]
         case 3:
-            level = [[1,2,1,1,1,2,1],[0,1,2,2,2,1,0],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0],[0,2,1,2,1,2,0]]
+            level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
         case 4:
-            level = [[1,2,1,1,1,2,1],[0,1,2,2,2,1,0],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0],[0,2,1,2,1,2,0]]
+            level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
         case 5:
-            level = [[1,2,1,1,1,2,1],[0,1,2,2,2,1,0],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0],[0,2,1,2,1,2,0]]
+            level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
         case 6:
-            level = [[1,2,1,1,1,2,1],[0,1,2,2,2,1,0],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0],[0,2,1,2,1,2,0]]
+            level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,4,4,2,0]]
         case 7:
-            level = [[1,2,1,1,1,2,1],[0,1,2,2,2,1,0],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0],[0,2,1,2,1,2,0]]
+            level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
         case 8:
-            level = [[1,2,1,1,1,2,1],[0,1,2,2,2,1,0],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0],[0,2,1,2,1,2,0]]
+            level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
         case 9:
-            level = [[1,2,1,1,1,2,1],[0,1,2,2,2,1,0],[1,1,0,0,0,1,1],[0,1,1,1,1,1,0],[0,2,1,2,1,2,0]]
+            level = [[1,2,1,1,2,1],[0,1,2,2,1,0],[1,1,0,0,1,1],[0,1,1,1,1,0],[0,2,1,1,2,0]]
         default:
             println("Error")
         }
@@ -101,6 +169,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         /* Called when a touch begins */
         
         for touch: AnyObject in touches {
+            if !isBallReleased {
+                isBallOnPaddle = true
+            }
             previousPosition = touch.locationInNode(self)
         }
     }
@@ -129,14 +200,59 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             previousPosition = location
         }
     }
+    
+    override func touchesEnded(touches: NSSet, withEvent event: UIEvent) {
+        if isBallOnPaddle {
+            isBallOnPaddle = false
+            isBallReleased = true
+            paddle.removeAllChildren()
+            spawnBallWithLocation(CGPointMake(paddle.position.x, paddle.position.y + paddle.size.height) , withVelocity: CGVectorMake(0.0, ballSpeed))
+        }
+    }
    
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
+        
+
+
+        
+        if isLevelCompleted() {
+            // Start next level
+            currentLevel++
+            
+            // reset due game end
+            if currentLevel > kFinalLevel {
+                lives = 2
+                currentLevel = 1
+            }
+            loadLevel(currentLevel)
+            newBall()
+        }
+        else if isBallReleased && !isBallOnPaddle && self.childNodeWithName("ball") == nil {
+            lives--
+            
+            // reset due gome over
+            if lives < 0 {
+                lives = 2
+                currentLevel = 1
+                loadLevel(currentLevel)
+            }
+            newBall()
+        }
+    }
+    
+    override func didSimulatePhysics() {
+        self.enumerateChildNodesWithName("ball", usingBlock: { (node, stop) -> Void in
+            // ball leaves the screen
+            if node.position.y + node.frame.size.height < 0 {
+                node.removeFromParent()
+            }
+        })
     }
     
     
     func spawnBallWithLocation(location:CGPoint, withVelocity:CGVector) {
-        let ball = SKSpriteNode(imageNamed: "BallBlue")
+        ball.name = "ball"
         ball.position = CGPointMake(location.x, location.y)
         ball.physicsBody = SKPhysicsBody(circleOfRadius: ball.size.width * 0.5)
         ball.physicsBody?.velocity = withVelocity
@@ -147,9 +263,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ball.physicsBody?.categoryBitMask = kBallCategory
         ball.physicsBody?.collisionBitMask = kEdgeCategory | kPaddleCategory | kBrickCategory
         ball.physicsBody?.contactTestBitMask = kPaddleCategory | kBrickCategory
-        
         self.addChild(ball)
     }
+    
+    func isLevelCompleted() -> Bool {
+        for node in brickLayer.children {
+            if node.isKindOfClass(Brick) {
+                if !(node as Brick).isIndestructable {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+    
+    // MARK: SKPhysicsContactDelegate
     
     func didBeginContact(contact: SKPhysicsContact) {
         var firstBody:SKPhysicsBody
